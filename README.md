@@ -12,7 +12,7 @@
 
 - go version >= 1.17
 
-## 方法
+## 方法说明
 
 ```go
 // Reply 缓存器响应内容
@@ -46,6 +46,41 @@ type Cache interface {
 type RangeFunc func(k string, v interface{}) bool
 ```
 
-## 灵感
+## 基准参考
+
+```
+goos: windows
+goarch: amd64
+pkg: github.com/azeroth-sha/cache/memory
+cpu: Intel(R) Xeon(R) CPU E3-1231 v3 @ 3.40GHz
+BenchmarkSet-8                   5631349               613.8 ns/op            95 B/op          4 allocs/op
+BenchmarkSet-8                   5577706               617.4 ns/op            95 B/op          4 allocs/op
+BenchmarkSet-8                   5821218               627.6 ns/op            95 B/op          4 allocs/op
+BenchmarkGet-8                   6949197               506.9 ns/op            63 B/op          2 allocs/op
+BenchmarkGet-8                   7159614               500.1 ns/op            63 B/op          2 allocs/op
+BenchmarkGet-8                   7267500               501.8 ns/op            63 B/op          2 allocs/op
+BenchmarkDel-8                  10551502               322.0 ns/op            64 B/op          2 allocs/op
+BenchmarkDel-8                  11155561               320.9 ns/op            64 B/op          2 allocs/op
+BenchmarkDel-8                  11227999               327.3 ns/op            64 B/op          2 allocs/op
+BenchmarkSetX-8                  5064267               714.8 ns/op           119 B/op          5 allocs/op
+BenchmarkSetX-8                  5028674               755.2 ns/op           119 B/op          5 allocs/op
+BenchmarkSetX-8                  4281289               735.4 ns/op           119 B/op          5 allocs/op
+BenchmarkSetWithParallel-8      13636311               255.0 ns/op            95 B/op          4 allocs/op
+BenchmarkSetWithParallel-8      13856289               253.1 ns/op            95 B/op          4 allocs/op
+BenchmarkSetWithParallel-8      15273561               243.6 ns/op            95 B/op          4 allocs/op
+BenchmarkGetWithParallel-8      23599113               161.9 ns/op            63 B/op          2 allocs/op
+BenchmarkGetWithParallel-8      23006031               162.7 ns/op            63 B/op          2 allocs/op
+BenchmarkGetWithParallel-8      23599701               164.0 ns/op            63 B/op          2 allocs/op
+BenchmarkDelWithParallel-8      25255748               129.6 ns/op            64 B/op          2 allocs/op
+BenchmarkDelWithParallel-8      24468538               124.8 ns/op            64 B/op          2 allocs/op
+BenchmarkDelWithParallel-8      28035482               128.7 ns/op            64 B/op          2 allocs/op
+BenchmarkSetXWithParallel-8     12816495               294.1 ns/op           119 B/op          5 allocs/op
+BenchmarkSetXWithParallel-8     12107102               291.6 ns/op           119 B/op          5 allocs/op
+BenchmarkSetXWithParallel-8     12172800               287.5 ns/op           119 B/op          5 allocs/op
+PASS
+ok      github.com/azeroth-sha/cache/memory     98.954s
+```
+
+## 灵感来源
 
 - 灵感来源于[go-cache](https://github.com/patrickmn/go-cache)并新增了一些方法
