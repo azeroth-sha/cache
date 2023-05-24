@@ -8,8 +8,5 @@ type item struct {
 }
 
 func (i *item) Expired() bool {
-	if i.e == nil {
-		return false
-	}
-	return time.Now().After(*i.e)
+	return i.e != nil && time.Now().After(*i.e)
 }

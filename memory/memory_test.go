@@ -70,7 +70,7 @@ func BenchmarkDel(b *testing.B) {
 	}
 }
 
-func BenchmarkGetX(b *testing.B) {
+func BenchmarkSetX(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		dict.SetX(
@@ -121,7 +121,7 @@ func BenchmarkDelWithParallel(b *testing.B) {
 	})
 }
 
-func BenchmarkGetXWithParallel(b *testing.B) {
+func BenchmarkSetXWithParallel(b *testing.B) {
 	var i int64
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {

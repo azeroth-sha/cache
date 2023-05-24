@@ -13,179 +13,203 @@ type shard struct {
 }
 
 func (s *shard) Has(k string) cache.Reply {
+	r := new(reply)
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-	_, found := s.dict[k]
-	return &reply{has: found}
+	r.has = s.delExpired(k)
+	s.mu.RUnlock()
+	return r
 }
 
 func (s *shard) Set(k string, v interface{}) cache.Reply {
-	_ = s.DelExpired(k)
+	r := new(reply)
 	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.delExpired(k)
 	s.dict[k] = &item{v: v}
-	return new(reply)
+	s.mu.Unlock()
+	return r
 }
 
 func (s *shard) SetX(k string, v interface{}, d time.Duration) cache.Reply {
-	_ = s.DelExpired(k)
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	r := new(reply)
 	e := time.Now().Add(d)
+	s.mu.Lock()
+	s.delExpired(k)
 	s.dict[k] = &item{v: v, e: &e}
-	return new(reply)
+	s.mu.Unlock()
+	return r
 }
 
 func (s *shard) SetN(k string, v interface{}) cache.Reply {
-	_ = s.DelExpired(k)
-	if r := s.Has(k); r.Has() {
+	r := new(reply)
+	s.mu.Lock()
+	if r.has = s.delExpired(k); r.has {
 		return r
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.dict[k] = &item{v: v}
-	return new(reply)
+	s.mu.Unlock()
+	return r
 }
 
 func (s *shard) SetNX(k string, v interface{}, d time.Duration) cache.Reply {
-	_ = s.DelExpired(k)
-	if r := s.Has(k); r.Has() {
+	r := new(reply)
+	e := time.Now().Add(d)
+	s.mu.Lock()
+	if r.has = s.delExpired(k); r.has {
 		return r
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	e := time.Now().Add(d)
 	s.dict[k] = &item{v: v, e: &e}
-	return new(reply)
+	s.mu.Unlock()
+	return r
 }
 
 func (s *shard) Del(k string) cache.Reply {
-	_ = s.DelExpired(k)
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	r := new(reply)
-	if _, ok := s.dict[k]; ok {
+	s.mu.Lock()
+	if s.delExpired(k) {
 		delete(s.dict, k)
 		r.has = true
 	}
+	s.mu.Unlock()
 	return r
 }
 
 func (s *shard) DelExpired(k string) cache.Reply {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	r := new(reply)
-	if i, ok := s.dict[k]; ok && i.Expired() {
-		delete(s.dict, k)
-		r.has = true
-		if s.call != nil {
-			s.call(k, i.v)
-		}
-	}
+	s.mu.Lock()
+	r.has = s.delExpired(k)
+	s.mu.Unlock()
 	return r
 }
 
 func (s *shard) Get(k string) cache.Reply {
-	_ = s.DelExpired(k)
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 	r := new(reply)
-	if i, ok := s.dict[k]; ok {
+	s.mu.RLock()
+	if s.delExpired(k) {
 		r.has = true
-		r.val = i.v
+		r.val = s.dict[k].v
 	}
+	s.mu.RUnlock()
 	return r
 }
 
 func (s *shard) GetDel(k string) cache.Reply {
-	_ = s.DelExpired(k)
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	r := new(reply)
-	if i, ok := s.dict[k]; ok {
-		delete(s.dict, k)
+	s.mu.Lock()
+	if s.delExpired(k) {
 		r.has = true
-		r.val = i.v
+		r.val = s.dict[k].v
+		delete(s.dict, k)
 	}
+	s.mu.Unlock()
 	return r
 }
 
 func (s *shard) GetSet(k string, v interface{}) cache.Reply {
-	_ = s.DelExpired(k)
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	r := new(reply)
-	if i, ok := s.dict[k]; ok {
+	s.mu.Lock()
+	if s.delExpired(k) {
 		r.has = true
-		r.val = i.v
+		r.val = s.dict[k].v
 	}
 	s.dict[k] = &item{v: v}
+	s.mu.Unlock()
 	return r
 }
 
 func (s *shard) GetSetX(k string, v interface{}, d time.Duration) cache.Reply {
-	_ = s.DelExpired(k)
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	r := new(reply)
-	if i, ok := s.dict[k]; ok {
-		r.has = true
-		r.val = i.v
-	}
 	e := time.Now().Add(d)
+	s.mu.Lock()
+	if s.delExpired(k) {
+		r.has = true
+		r.val = s.dict[k].v
+	}
 	s.dict[k] = &item{v: v, e: &e}
+	s.mu.Unlock()
 	return r
 }
 
 func (s *shard) Expire(k string, d time.Duration) cache.Reply {
-	_ = s.DelExpired(k)
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	r := new(reply)
-	if i, ok := s.dict[k]; ok {
-		e := time.Now().Add(d)
-		i.e = &e
+	e := time.Now().Add(d)
+	s.mu.Lock()
+	if s.delExpired(k) {
 		r.has = true
+		s.dict[k].e = &e
 	}
+	s.mu.Unlock()
 	return r
 }
 
 func (s *shard) Dur(k string) cache.Reply {
-	_ = s.DelExpired(k)
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 	r := new(reply)
-	if i, ok := s.dict[k]; ok {
+	s.mu.RLock()
+	if s.delExpired(k) {
 		r.has = true
+		i := s.dict[k]
 		if i.e != nil {
 			r.dur = i.e.Sub(time.Now())
 		}
 	}
+	s.mu.RUnlock()
 	return r
 }
 
 func (s *shard) Len(f cache.RangeFunc) cache.Reply {
-	s.check()
+	r := new(reply)
+	kList := make([]string, 0)
+	defer func() {
+		if len(kList) > 0 {
+			go s.checkKeys(kList)
+		}
+	}()
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-	for k := range s.dict {
-		if !f(k, nil) {
+	for k, i := range s.dict {
+		if i.Expired() {
+			kList = append(kList, k)
+			continue
+		}
+		if r.has = f(k, nil); !r.has {
 			break
 		}
 	}
-	return new(reply)
+	s.mu.RUnlock()
+	return r
 }
 
 func (s *shard) Range(f cache.RangeFunc) cache.Reply {
-	s.check()
+	r := new(reply)
+	kList := make([]string, 0)
+	defer func() {
+		if len(kList) > 0 {
+			go s.checkKeys(kList)
+		}
+	}()
 	s.mu.RLock()
-	defer s.mu.RUnlock()
 	for k, i := range s.dict {
-		if !f(k, i.v) {
+		if i.Expired() {
+			kList = append(kList, k)
+			continue
+		}
+		if r.has = f(k, i.v); !r.has {
 			break
 		}
 	}
-	return new(reply)
+	s.mu.RUnlock()
+	return r
+}
+
+func (s *shard) delExpired(k string) bool {
+	if i, ok := s.dict[k]; !ok {
+		return false
+	} else if i.Expired() {
+		delete(s.dict, k)
+		if s.call != nil {
+			s.call(k, i.v)
+		}
+		return false
+	}
+	return true
 }
 
 func (s *shard) check() {
@@ -203,5 +227,11 @@ func (s *shard) check() {
 		if s.call != nil {
 			s.call(k, i.v)
 		}
+	}
+}
+
+func (s *shard) checkKeys(keys []string) {
+	for _, key := range keys {
+		s.DelExpired(key)
 	}
 }

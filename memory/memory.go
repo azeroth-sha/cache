@@ -79,7 +79,9 @@ func (b *barrel) Dur(k string) cache.Reply {
 func (b *barrel) Len(f cache.RangeFunc) cache.Reply {
 	var r cache.Reply
 	for _, s := range b.shardMap {
-		r = s.Len(f)
+		if r = s.Len(f); !r.Has() {
+			break
+		}
 	}
 	return r
 }
@@ -87,7 +89,9 @@ func (b *barrel) Len(f cache.RangeFunc) cache.Reply {
 func (b *barrel) Range(f cache.RangeFunc) cache.Reply {
 	var r cache.Reply
 	for _, s := range b.shardMap {
-		r = s.Range(f)
+		if r = s.Range(f); !r.Has() {
+			break
+		}
 	}
 	return r
 }
