@@ -164,6 +164,10 @@ func (s *shard) Len(f cache.RangeFunc) cache.Reply {
 		}
 	}()
 	s.mu.RLock()
+	if len(s.dict) == 0 {
+		r.has = true
+		goto EXIT
+	}
 	for k, i := range s.dict {
 		if i.Expired() {
 			kList = append(kList, k)
@@ -173,6 +177,7 @@ func (s *shard) Len(f cache.RangeFunc) cache.Reply {
 			break
 		}
 	}
+EXIT:
 	s.mu.RUnlock()
 	return r
 }
@@ -186,6 +191,10 @@ func (s *shard) Range(f cache.RangeFunc) cache.Reply {
 		}
 	}()
 	s.mu.RLock()
+	if len(s.dict) == 0 {
+		r.has = true
+		goto EXIT
+	}
 	for k, i := range s.dict {
 		if i.Expired() {
 			kList = append(kList, k)
@@ -195,6 +204,7 @@ func (s *shard) Range(f cache.RangeFunc) cache.Reply {
 			break
 		}
 	}
+EXIT:
 	s.mu.RUnlock()
 	return r
 }
