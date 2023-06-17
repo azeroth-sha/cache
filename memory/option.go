@@ -32,7 +32,7 @@ func WithCallback(fun Handler) Option {
 }
 
 // WithTimer 自定义定时检查方法
-// fun 将会轮询每一个元素，返回false时将会立即触发回调
+// fun 将会轮询每一个元素，返回false时将会立即触发超时回调
 func WithTimer(fun Handler) Option {
 	return func(b *barrel) {
 		b.rangeHandler = fun
