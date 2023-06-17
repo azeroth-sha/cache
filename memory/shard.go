@@ -175,6 +175,11 @@ func (s *shard) Expire(k string, d time.Duration) *reply {
 	if s.delExpired(k) {
 		i := s.dict[k]
 		s.setReply(i, r)
+		if d < 0 {
+			i.expireHas = false
+			return r
+		}
+		i.expireHas = true
 		i.expire = time.Now().Add(d)
 	}
 	return r
