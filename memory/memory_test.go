@@ -13,8 +13,9 @@ import (
 var dict cache.Cache
 
 func init() {
-	dict = cache.New(memory.Name, memory.WithCallback(func(k string, v interface{}) {
-		log.Printf("k: %s v: %v", k, v)
+	dict = cache.New(memory.Name, memory.WithCallback(func(k string, i memory.Item) bool {
+		log.Printf("k: %s value: %value", k, i.Value())
+		return false
 	}))
 }
 
@@ -28,7 +29,7 @@ func init() {
 //	}
 //	for _, key := range keys {
 //		reply := dict.Get(key)
-//		fmt.Printf("has: %t val: %v dur: %v\r\n", reply.Has(), reply.Val(), reply.Dur())
+//		fmt.Printf("has: %t val: %value dur: %value\r\n", reply.Has(), reply.Val(), reply.TTL())
 //	}
 //	var cnt int32
 //	dict.Len(func(k string, _ interface{}) bool {
@@ -36,8 +37,8 @@ func init() {
 //		return true
 //	})
 //	fmt.Printf("count: %d\r\n", cnt)
-//	dict.Range(func(k string, v interface{}) bool {
-//		fmt.Printf("k: %s v: %v\r\n", k, v)
+//	dict.Handler(func(k string, value interface{}) bool {
+//		fmt.Printf("k: %s value: %value\r\n", k, value)
 //		return true
 //	})
 //}
@@ -57,7 +58,7 @@ func BenchmarkGet(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		dict.Get(
 			fmt.Sprintf("%08x", i%100000),
-		)
+		).Release()
 	}
 }
 
@@ -66,7 +67,7 @@ func BenchmarkDel(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		dict.Del(
 			fmt.Sprintf("%08x", i%100000),
-		)
+		).Release()
 	}
 }
 
@@ -77,7 +78,7 @@ func BenchmarkSetX(b *testing.B) {
 			fmt.Sprintf("%08x", i%100000),
 			i,
 			time.Second,
-		)
+		).Release()
 	}
 }
 
@@ -103,7 +104,7 @@ func BenchmarkGetWithParallel(b *testing.B) {
 			n := atomic.AddInt64(&i, 1)
 			dict.Get(
 				fmt.Sprintf("%08x", n%100000),
-			)
+			).Release()
 		}
 	})
 }
@@ -116,7 +117,7 @@ func BenchmarkDelWithParallel(b *testing.B) {
 			n := atomic.AddInt64(&i, 1)
 			dict.Del(
 				fmt.Sprintf("%08x", n%100000),
-			)
+			).Release()
 		}
 	})
 }
@@ -131,7 +132,7 @@ func BenchmarkSetXWithParallel(b *testing.B) {
 				fmt.Sprintf("%08x", n%100000),
 				n,
 				time.Second,
-			)
+			).Release()
 		}
 	})
 }

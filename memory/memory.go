@@ -8,20 +8,28 @@ import (
 	"time"
 )
 
-type Callback func(k string, v interface{})
+const Name = `memory`
+
+// Handler 回调方法
+type Handler func(k string, i Item) bool
+
+func defaultCheck(_ string, i Item) bool {
+	return i.Expired()
+}
 
 type barrel struct {
-	checkDur time.Duration
-	shardNum uint64
-	shardMap map[uint64]*shard
-	callback Callback
-	closed   chan struct{}
+	checkDur     time.Duration
+	shardNum     uint32
+	shards       []*shard
+	callHandler  Handler
+	rangeHandler Handler
+	closed       chan struct{}
 }
 
 func (b *barrel) getShard(k string) *shard {
-	sha := fnv.New64a()
-	_, _ = sha.Write([]byte(k))
-	return b.shardMap[sha.Sum64()%b.shardNum]
+	sha := fnv.New32a()
+	_, _ = sha.Write(toBytes(k))
+	return b.shards[sha.Sum32()&b.shardNum]
 }
 
 func (b *barrel) Has(k string) cache.Reply {
@@ -72,28 +80,19 @@ func (b *barrel) Expire(k string, d time.Duration) cache.Reply {
 	return b.getShard(k).Expire(k, d)
 }
 
-func (b *barrel) Dur(k string) cache.Reply {
-	return b.getShard(k).Dur(k)
+func (b *barrel) TTL(k string) cache.Reply {
+	return b.getShard(k).TTL(k)
 }
 
-func (b *barrel) Len(f cache.RangeFunc) cache.Reply {
-	var r cache.Reply
-	for _, s := range b.shardMap {
-		if r = s.Len(f); !r.Has() {
+func (b *barrel) Range(f Handler) {
+	r := resGet()
+	defer r.Release()
+	for _, s := range b.shards {
+		if s.Range(f, r); !r.Has() {
 			break
 		}
+		r.init()
 	}
-	return r
-}
-
-func (b *barrel) Range(f cache.RangeFunc) cache.Reply {
-	var r cache.Reply
-	for _, s := range b.shardMap {
-		if r = s.Range(f); !r.Has() {
-			break
-		}
-	}
-	return r
 }
 
 func (b *barrel) check() {
@@ -108,8 +107,8 @@ EXIT:
 		case <-b.closed:
 			break EXIT
 		case <-tk.C:
-			for _, s := range b.shardMap {
-				s.check()
+			for _, s := range b.shards {
+				s.check(b.rangeHandler)
 			}
 		}
 	}
@@ -117,26 +116,26 @@ EXIT:
 
 func New(opts ...interface{}) cache.Cache {
 	b := &barrel{
-		checkDur: time.Second,
-		shardNum: uint64(runtime.NumCPU() * 2),
-		shardMap: make(map[uint64]*shard),
-		callback: nil,
-		closed:   make(chan struct{}),
+		checkDur:     time.Second,
+		shardNum:     uint32(runtime.NumCPU() * 2),
+		shards:       nil,
+		callHandler:  nil,
+		rangeHandler: defaultCheck,
+		closed:       make(chan struct{}),
 	}
 	for _, opt := range opts {
 		if option, ok := opt.(Option); ok {
 			option(b)
 		}
 	}
-	if b.shardNum <= 0 {
-		b.shardNum = uint64(runtime.NumCPU() * 2)
-	}
-	for i := uint64(0); i < b.shardNum; i++ {
-		b.shardMap[i] = &shard{
+	b.shardNum--
+	b.shards = make([]*shard, 0, b.shardNum+1)
+	for i := uint32(0); i <= b.shardNum; i++ {
+		b.shards = append(b.shards, &shard{
 			mu:   new(sync.RWMutex),
-			call: b.callback,
+			call: b.callHandler,
 			dict: make(map[string]*item),
-		}
+		})
 	}
 	go b.check()
 	runtime.SetFinalizer(b, func(c *barrel) { close(c.closed) })

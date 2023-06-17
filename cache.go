@@ -13,6 +13,7 @@ type Reply interface {
 	Val() interface{}   // 返回的值
 	Err() error         // 返回的错误
 	Dur() time.Duration // 剩余时长
+	Release()           // 释放响应结果
 }
 
 // Cache 字典缓存器
@@ -29,13 +30,8 @@ type Cache interface {
 	GetSet(k string, v interface{}) Reply                   // 获取并设置新的键值
 	GetSetX(k string, v interface{}, d time.Duration) Reply // 获取并设置新的键值和过期时长
 	Expire(k string, d time.Duration) Reply                 // 设置新的过期时间
-	Dur(k string) Reply                                     // 获取过期时间
-	Len(f RangeFunc) Reply                                  // 遍历键
-	Range(f RangeFunc) Reply                                // 遍历键值
+	TTL(k string) Reply                                     // 获取过期时间
 }
-
-// RangeFunc 遍历回调方法
-type RangeFunc func(k string, v interface{}) bool
 
 // NewFunc 缓存器创建方法
 // 参数自定义，创建缓存器时透传

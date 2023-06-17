@@ -53,32 +53,32 @@ goos: windows
 goarch: amd64
 pkg: github.com/azeroth-sha/cache/memory
 cpu: Intel(R) Xeon(R) CPU E3-1231 v3 @ 3.40GHz
-BenchmarkSet-8                   5631349               613.8 ns/op            95 B/op          4 allocs/op
-BenchmarkSet-8                   5577706               617.4 ns/op            95 B/op          4 allocs/op
-BenchmarkSet-8                   5821218               627.6 ns/op            95 B/op          4 allocs/op
-BenchmarkGet-8                   6949197               506.9 ns/op            63 B/op          2 allocs/op
-BenchmarkGet-8                   7159614               500.1 ns/op            63 B/op          2 allocs/op
-BenchmarkGet-8                   7267500               501.8 ns/op            63 B/op          2 allocs/op
-BenchmarkDel-8                  10551502               322.0 ns/op            64 B/op          2 allocs/op
-BenchmarkDel-8                  11155561               320.9 ns/op            64 B/op          2 allocs/op
-BenchmarkDel-8                  11227999               327.3 ns/op            64 B/op          2 allocs/op
-BenchmarkSetX-8                  5064267               714.8 ns/op           119 B/op          5 allocs/op
-BenchmarkSetX-8                  5028674               755.2 ns/op           119 B/op          5 allocs/op
-BenchmarkSetX-8                  4281289               735.4 ns/op           119 B/op          5 allocs/op
-BenchmarkSetWithParallel-8      13636311               255.0 ns/op            95 B/op          4 allocs/op
-BenchmarkSetWithParallel-8      13856289               253.1 ns/op            95 B/op          4 allocs/op
-BenchmarkSetWithParallel-8      15273561               243.6 ns/op            95 B/op          4 allocs/op
-BenchmarkGetWithParallel-8      23599113               161.9 ns/op            63 B/op          2 allocs/op
-BenchmarkGetWithParallel-8      23006031               162.7 ns/op            63 B/op          2 allocs/op
-BenchmarkGetWithParallel-8      23599701               164.0 ns/op            63 B/op          2 allocs/op
-BenchmarkDelWithParallel-8      25255748               129.6 ns/op            64 B/op          2 allocs/op
-BenchmarkDelWithParallel-8      24468538               124.8 ns/op            64 B/op          2 allocs/op
-BenchmarkDelWithParallel-8      28035482               128.7 ns/op            64 B/op          2 allocs/op
-BenchmarkSetXWithParallel-8     12816495               294.1 ns/op           119 B/op          5 allocs/op
-BenchmarkSetXWithParallel-8     12107102               291.6 ns/op           119 B/op          5 allocs/op
-BenchmarkSetXWithParallel-8     12172800               287.5 ns/op           119 B/op          5 allocs/op
+BenchmarkSet-8                   6725599               531.3 ns/op            76 B/op          3 allocs/op
+BenchmarkSet-8                   7228197               516.8 ns/op            75 B/op          3 allocs/op
+BenchmarkSet-8                   7281092               503.2 ns/op            75 B/op          3 allocs/op
+BenchmarkGet-8                  11582373               301.1 ns/op            18 B/op          1 allocs/op
+BenchmarkGet-8                  12887090               314.6 ns/op            18 B/op          1 allocs/op
+BenchmarkGet-8                  10562623               298.8 ns/op            17 B/op          1 allocs/op
+BenchmarkDel-8                  17233570               191.9 ns/op            15 B/op          1 allocs/op
+BenchmarkDel-8                  18140698               196.7 ns/op            15 B/op          1 allocs/op
+BenchmarkDel-8                  18709345               195.9 ns/op            15 B/op          1 allocs/op
+BenchmarkSetX-8                  9990625               384.4 ns/op            26 B/op          2 allocs/op
+BenchmarkSetX-8                  8875980               351.9 ns/op            26 B/op          2 allocs/op
+BenchmarkSetX-8                 10816364               340.7 ns/op            26 B/op          2 allocs/op
+BenchmarkSetWithParallel-8      22513000               146.9 ns/op            72 B/op          3 allocs/op
+BenchmarkSetWithParallel-8      24671593               143.8 ns/op            72 B/op          3 allocs/op
+BenchmarkSetWithParallel-8      25524890               145.6 ns/op            73 B/op          3 allocs/op
+BenchmarkGetWithParallel-8      45086565                92.57 ns/op           16 B/op          1 allocs/op
+BenchmarkGetWithParallel-8      45930435                92.79 ns/op           16 B/op          1 allocs/op
+BenchmarkGetWithParallel-8      44680366                97.86 ns/op           16 B/op          1 allocs/op
+BenchmarkDelWithParallel-8      50732734                66.31 ns/op           15 B/op          1 allocs/op
+BenchmarkDelWithParallel-8      49343863                66.49 ns/op           15 B/op          1 allocs/op
+BenchmarkDelWithParallel-8      53936947                67.42 ns/op           15 B/op          1 allocs/op
+BenchmarkSetXWithParallel-8     34435525               100.3 ns/op            24 B/op          2 allocs/op
+BenchmarkSetXWithParallel-8     36729596               101.5 ns/op            24 B/op          2 allocs/op
+BenchmarkSetXWithParallel-8     33610495               106.0 ns/op            24 B/op          2 allocs/op
 PASS
-ok      github.com/azeroth-sha/cache/memory     98.954s
+ok      github.com/azeroth-sha/cache/memory     93.894s
 ```
 
 ## 灵感来源
