@@ -224,20 +224,25 @@ func (s *shard) delExpired(k string) bool {
 	return true
 }
 
-func (s *shard) check(f Handler) {
-	s.mu.RLock()
-	kList := make([]string, 0)
+func (s *shard) check(list []string, f Handler) int {
+	if len(list) > 0 {
+		list = list[:0]
+	}
+	cnt := cap(list)
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	for k, i := range s.dict {
 		if !f(k, i) {
-			kList = append(kList, k)
+			list = append(list, k)
+			if cnt--; cnt <= 0 {
+				break
+			}
 		}
 	}
-	s.mu.RUnlock()
-	for _, k := range kList {
-		s.mu.Lock()
+	for _, k := range list {
 		s.delExpired(k)
-		s.mu.Unlock()
 	}
+	return cnt
 }
 
 func (s *shard) checkKeys(keys []string) {

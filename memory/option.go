@@ -1,7 +1,6 @@
 package memory
 
 import (
-	"runtime"
 	"time"
 )
 
@@ -17,9 +16,6 @@ func WithCheckDur(dur time.Duration) Option {
 // WithShardNum 自定义分片数
 func WithShardNum(num int) Option {
 	return func(b *barrel) {
-		if num <= 0 {
-			num = runtime.NumCPU() * 2
-		}
 		b.shardNum = uint32(num)
 	}
 }

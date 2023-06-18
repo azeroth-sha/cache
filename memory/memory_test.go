@@ -1,9 +1,8 @@
-package memory_test
+package memory
 
 import (
 	"fmt"
 	"github.com/azeroth-sha/cache"
-	"github.com/azeroth-sha/cache/memory"
 	"log"
 	"sync/atomic"
 	"testing"
@@ -13,10 +12,15 @@ import (
 var dict cache.Cache
 
 func init() {
-	dict = cache.New(memory.Name, memory.WithCallback(func(k string, i memory.Item) bool {
-		log.Printf("k: %s value: %value", k, i.Value())
-		return false
-	}))
+	dict = cache.New(
+		Name,
+		//memory.WithCallback(callback),
+	)
+}
+
+func callback(k string, i Item) bool {
+	log.Printf("k: %s value: %value", k, i.Value())
+	return false
 }
 
 //func TestNew(t *testing.T) {
@@ -42,93 +46,120 @@ func init() {
 //		return true
 //	})
 //}
+//
+//func BenchmarkSet(b *testing.B) {
+//	b.ResetTimer()
+//	for i := 0; i < b.N; i++ {
+//		dict.Set(
+//			fmt.Sprintf("%08x", i%100000),
+//			i,
+//		)
+//	}
+//}
+//
+//func BenchmarkGet(b *testing.B) {
+//	b.ResetTimer()
+//	for i := 0; i < b.N; i++ {
+//		dict.Get(
+//			fmt.Sprintf("%08x", i%100000),
+//		).Release()
+//	}
+//}
+//
+//func BenchmarkDel(b *testing.B) {
+//	b.ResetTimer()
+//	for i := 0; i < b.N; i++ {
+//		dict.Del(
+//			fmt.Sprintf("%08x", i%100000),
+//		).Release()
+//	}
+//}
+//
+//func BenchmarkSetX(b *testing.B) {
+//	b.ResetTimer()
+//	for i := 0; i < b.N; i++ {
+//		dict.SetX(
+//			fmt.Sprintf("%08x", i%100000),
+//			i,
+//			time.Second,
+//		).Release()
+//	}
+//}
 
-func BenchmarkSet(b *testing.B) {
+func BenchmarkSetNX(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		dict.Set(
+		dict.SetNX(
 			fmt.Sprintf("%08x", i%100000),
 			i,
-		)
-	}
-}
-
-func BenchmarkGet(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		dict.Get(
-			fmt.Sprintf("%08x", i%100000),
+			time.Second*5,
 		).Release()
 	}
 }
 
-func BenchmarkDel(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		dict.Del(
-			fmt.Sprintf("%08x", i%100000),
-		).Release()
-	}
-}
+//
+//func BenchmarkSetWithParallel(b *testing.B) {
+//	var i int64
+//	b.ResetTimer()
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			n := atomic.AddInt64(&i, 1)
+//			dict.Set(
+//				fmt.Sprintf("%08x", n%100000),
+//				n,
+//			)
+//		}
+//	})
+//}
+//
+//func BenchmarkGetWithParallel(b *testing.B) {
+//	var i int64
+//	b.ResetTimer()
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			n := atomic.AddInt64(&i, 1)
+//			dict.Get(
+//				fmt.Sprintf("%08x", n%100000),
+//			).Release()
+//		}
+//	})
+//}
+//
+//func BenchmarkDelWithParallel(b *testing.B) {
+//	var i int64
+//	b.ResetTimer()
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			n := atomic.AddInt64(&i, 1)
+//			dict.Del(
+//				fmt.Sprintf("%08x", n%100000),
+//			).Release()
+//		}
+//	})
+//}
+//
+//func BenchmarkSetXWithParallel(b *testing.B) {
+//	var i int64
+//	b.ResetTimer()
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			n := atomic.AddInt64(&i, 1)
+//			dict.SetX(
+//				fmt.Sprintf("%08x", n%100000),
+//				n,
+//				time.Second,
+//			).Release()
+//		}
+//	})
+//}
 
-func BenchmarkSetX(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		dict.SetX(
-			fmt.Sprintf("%08x", i%100000),
-			i,
-			time.Second,
-		).Release()
-	}
-}
-
-func BenchmarkSetWithParallel(b *testing.B) {
+func BenchmarkSetNXWithParallel(b *testing.B) {
 	var i int64
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			n := atomic.AddInt64(&i, 1)
-			dict.Set(
-				fmt.Sprintf("%08x", n%100000),
-				n,
-			)
-		}
-	})
-}
-
-func BenchmarkGetWithParallel(b *testing.B) {
-	var i int64
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			n := atomic.AddInt64(&i, 1)
-			dict.Get(
-				fmt.Sprintf("%08x", n%100000),
-			).Release()
-		}
-	})
-}
-
-func BenchmarkDelWithParallel(b *testing.B) {
-	var i int64
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			n := atomic.AddInt64(&i, 1)
-			dict.Del(
-				fmt.Sprintf("%08x", n%100000),
-			).Release()
-		}
-	})
-}
-
-func BenchmarkSetXWithParallel(b *testing.B) {
-	var i int64
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			n := atomic.AddInt64(&i, 1)
-			dict.SetX(
+			dict.SetNX(
 				fmt.Sprintf("%08x", n%100000),
 				n,
 				time.Second,

@@ -29,7 +29,7 @@ type barrel struct {
 func (b *barrel) getShard(k string) *shard {
 	sha := fnv.New32a()
 	_, _ = sha.Write(toBytes(k))
-	return b.shards[sha.Sum32()&b.shardNum]
+	return b.shards[sha.Sum32()&(b.shardNum-1)]
 }
 
 func (b *barrel) Has(k string) cache.Reply {
@@ -101,6 +101,7 @@ func (b *barrel) check() {
 	}
 	tk := time.NewTicker(b.checkDur)
 	defer tk.Stop()
+	list := make([]string, 0, b.shardNum*8)
 EXIT:
 	for true {
 		select {
@@ -108,7 +109,8 @@ EXIT:
 			break EXIT
 		case <-tk.C:
 			for _, s := range b.shards {
-				s.check(b.rangeHandler)
+				for s.check(list, b.rangeHandler) != 0 {
+				}
 			}
 		}
 	}
@@ -117,9 +119,6 @@ EXIT:
 func New(opts ...interface{}) cache.Cache {
 	b := &barrel{
 		checkDur:     time.Second,
-		shardNum:     uint32(runtime.NumCPU() * 2),
-		shards:       nil,
-		callHandler:  nil,
 		rangeHandler: defaultCheck,
 		closed:       make(chan struct{}),
 	}
@@ -128,9 +127,11 @@ func New(opts ...interface{}) cache.Cache {
 			option(b)
 		}
 	}
-	b.shardNum--
-	b.shards = make([]*shard, 0, b.shardNum+1)
-	for i := uint32(0); i <= b.shardNum; i++ {
+	if b.shardNum <= 0 {
+		b.shardNum = uint32(runtime.NumCPU() * 2)
+	}
+	b.shards = make([]*shard, 0, b.shardNum)
+	for i := uint32(0); i < b.shardNum; i++ {
 		b.shards = append(b.shards, &shard{
 			mu:   new(sync.RWMutex),
 			call: b.callHandler,
