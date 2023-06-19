@@ -1,8 +1,9 @@
-package memory
+package memory_test
 
 import (
 	"fmt"
 	"github.com/azeroth-sha/cache"
+	"github.com/azeroth-sha/cache/memory"
 	"log"
 	"sync/atomic"
 	"testing"
@@ -13,12 +14,12 @@ var dict cache.Cache
 
 func init() {
 	dict = cache.New(
-		Name,
-		//memory.WithCallback(callback),
+		memory.Name,
+		memory.WithCallback(callback),
 	)
 }
 
-func callback(k string, i Item) bool {
+func callback(k string, i memory.Item) bool {
 	log.Printf("k: %s value: %value", k, i.Value())
 	return false
 }
@@ -92,7 +93,7 @@ func BenchmarkSetNX(b *testing.B) {
 		dict.SetNX(
 			fmt.Sprintf("%08x", i%100000),
 			i,
-			time.Second*5,
+			time.Second,
 		).Release()
 	}
 }
