@@ -17,6 +17,11 @@ func defaultCheck(_ string, i Item) bool {
 	return i.Expired()
 }
 
+type Cache interface {
+	cache.Cache
+	Range(Handler)
+}
+
 type barrel struct {
 	checkDur     time.Duration
 	shardNum     uint32
@@ -101,7 +106,6 @@ func (b *barrel) check() {
 	}
 	tk := time.NewTicker(b.checkDur)
 	defer tk.Stop()
-	list := make([]string, 0, b.shardNum*8)
 EXIT:
 	for true {
 		select {
@@ -109,14 +113,13 @@ EXIT:
 			break EXIT
 		case <-tk.C:
 			for _, s := range b.shards {
-				for s.check(list, b.rangeHandler) != 0 {
-				}
+				s.check(b.callHandler)
 			}
 		}
 	}
 }
 
-func New(opts ...interface{}) cache.Cache {
+func New(opts ...interface{}) Cache {
 	b := &barrel{
 		checkDur:     time.Second,
 		rangeHandler: defaultCheck,
@@ -144,5 +147,7 @@ func New(opts ...interface{}) cache.Cache {
 }
 
 func init() {
-	cache.Register(Name, New)
+	cache.Register(Name, func(i ...interface{}) cache.Cache {
+		return New(i...)
+	})
 }
