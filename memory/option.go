@@ -23,7 +23,7 @@ func WithShardNum(num int) Option {
 // WithCallback 自定义超时回调方法
 func WithCallback(fun Handler) Option {
 	return func(b *barrel) {
-		b.callHandler = fun
+		b.expireHandler = fun
 	}
 }
 
@@ -31,6 +31,6 @@ func WithCallback(fun Handler) Option {
 // fun 将会轮询每一个元素，返回false时将会立即触发超时回调
 func WithTimer(fun Handler) Option {
 	return func(b *barrel) {
-		b.rangeHandler = fun
+		b.checkHandler = fun
 	}
 }

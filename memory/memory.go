@@ -23,12 +23,12 @@ type Cache interface {
 }
 
 type barrel struct {
-	checkDur     time.Duration
-	shardNum     uint32
-	shards       []*shard
-	callHandler  Handler
-	rangeHandler Handler
-	closed       chan struct{}
+	checkDur      time.Duration
+	shardNum      uint32
+	shards        []*shard
+	expireHandler Handler
+	checkHandler  Handler
+	closed        chan struct{}
 }
 
 func (b *barrel) getShard(k string) *shard {
@@ -113,7 +113,7 @@ EXIT:
 			break EXIT
 		case <-tk.C:
 			for _, s := range b.shards {
-				s.check(b.callHandler)
+				s.check(b.checkHandler)
 			}
 		}
 	}
@@ -122,7 +122,7 @@ EXIT:
 func New(opts ...interface{}) Cache {
 	b := &barrel{
 		checkDur:     time.Second,
-		rangeHandler: defaultCheck,
+		checkHandler: defaultCheck,
 		closed:       make(chan struct{}),
 	}
 	for _, opt := range opts {
@@ -136,9 +136,9 @@ func New(opts ...interface{}) Cache {
 	b.shards = make([]*shard, 0, b.shardNum)
 	for i := uint32(0); i < b.shardNum; i++ {
 		b.shards = append(b.shards, &shard{
-			mu:   new(sync.RWMutex),
-			call: b.callHandler,
-			dict: make(map[string]*item),
+			dictLock:      new(sync.RWMutex),
+			expireHandler: b.expireHandler,
+			dict:          make(map[string]*item),
 		})
 	}
 	go b.check()
