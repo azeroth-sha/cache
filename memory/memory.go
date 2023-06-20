@@ -14,7 +14,7 @@ const Name = `memory`
 type Handler func(k string, i Item) bool
 
 func defaultCheck(_ string, i Item) bool {
-	return i.Expired()
+	return !i.Expired()
 }
 
 type Cache interface {
