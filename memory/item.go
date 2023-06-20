@@ -19,10 +19,7 @@ func (i *item) Value() interface{} {
 }
 
 func (i *item) Expired() bool {
-	if !i.expireHas {
-		return false
-	}
-	return time.Now().After(i.expire)
+	return i.expireHas && time.Now().After(i.expire)
 }
 
 func (i *item) Expire() time.Duration {
